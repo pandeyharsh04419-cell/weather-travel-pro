@@ -52,7 +52,38 @@ function render(){let p=selected,w=p.w,c=w.current,d=w.daily,cd=codes[c.weather_
 $("days").innerHTML=d.time.map((x,i)=>{let z=codes[d.weather_code[i]]||["🌤️","Weather"];return `<div class="card day"><div class="small">${new Date(x+"T12:00").toLocaleDateString([],{weekday:"short",month:"short",day:"numeric"})}</div><div class="emoji">${z[0]}</div><b>${temp(d.temperature_2m_max[i])}</b><span class="small">${temp(d.temperature_2m_min[i])}</span><div class="small">💧 ${d.precipitation_probability_max[i]??0}%</div></div>`}).join("");
 if(chart)chart.destroy();chart=new Chart($("chart"),{type:"line",data:{labels:d.time.map(x=>new Date(x+"T12:00").toLocaleDateString([],{weekday:"short"})),datasets:[{label:"Max",data:d.temperature_2m_max.map(v=>unit==="C"?v:v*9/5+32),tension:.35},{label:"Min",data:d.temperature_2m_min.map(v=>unit==="C"?v:v*9/5+32),tension:.35}]},options:{responsive:true,maintainAspectRatio:false}});
 }
-$("go").onclick=async()=>{let q=$("city").value.trim();if(!q)return;try{let r=await geo(q);if(!r[0])throw Error("City not found");load(r[0])}catch(e){notice(e.message,true)}};
+$("go").onclick=async()=>{
+    let q=$("city").value.trim();
+    if(!q)return;
+
+    try{
+        let r=await geo(q);
+
+        if(!r.length)
+            throw Error("City not found");
+
+        // Prefer the Indian result
+        let indiaResults=r.filter(x=>x.country_code==="IN");
+
+        // If multiple Indian results exist, prefer Uttar Pradesh
+        // when searching Gorakhpur
+        let selectedResult =
+            indiaResults.find(x=>
+                x.name.toLowerCase()===q.toLowerCase() &&
+                x.admin1==="Uttar Pradesh"
+            ) ||
+            indiaResults.find(x=>
+                x.name.toLowerCase()===q.toLowerCase()
+            ) ||
+            indiaResults[0] ||
+            r[0];
+
+        load(selectedResult);
+
+    }catch(e){
+        notice(e.message,true);
+    }
+};
 document.querySelectorAll("[data-city]").forEach(b=>b.onclick=()=>{$("city").value=b.dataset.city;$("go").click()});
 $("loc").onclick=()=>{if(!navigator.geolocation)return notice("Geolocation is not supported.",true);notice("Requesting location permission…");navigator.geolocation.getCurrentPosition(async p=>load({name:"My location",latitude:p.coords.latitude,longitude:p.coords.longitude,country:""}),()=>notice("Location permission was not granted.",true),{enableHighAccuracy:true,timeout:10000})};
 $("c").onclick=()=>{unit="C";$("c").className="primary";$("f").className="secondary";if(selected)render()};$("f").onclick=()=>{unit="F";$("f").className="primary";$("c").className="secondary";if(selected)render()};
