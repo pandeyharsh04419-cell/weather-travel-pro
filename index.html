@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2563eb"><link rel="manifest" href="./manifest.webmanifest"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><title>Weather & Travel Pro+</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--bg:#eef6ff;--card:#fff;--txt:#10233f;--muted:#64748b;--a:#2563eb;--b:#0ea5e9;--line:#d9e5f3}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Arial;background:linear-gradient(180deg,#dceeff,#f7fbff 55%,#edf4fc);color:var(--txt)}body.dark{--bg:#09111f;--card:#111d31;--txt:#eef6ff;--muted:#9fb1c8;--a:#60a5fa;--b:#38bdf8;--line:#263751;background:linear-gradient(180deg,#12213a,#09111f)}
+header{position:sticky;top:0;z-index:10;background:#ffffffdd;backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}body.dark header{background:#09111fdd}.nav{max-width:1180px;margin:auto;padding:13px 16px;display:flex;justify-content:space-between;align-items:center}.brand{font-weight:900;font-size:20px}.brand span{color:var(--a)}
+main{max-width:1180px;margin:auto;padding:18px 14px 50px}.panel,.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 25px #2563eb12}.panel{padding:18px}.hero{display:grid;grid-template-columns:1.5fr .8fr;gap:14px}h1{margin:0;font-size:clamp(30px,5vw,50px);line-height:1.05}.muted{color:var(--muted)}.search{display:flex;gap:8px;margin-top:15px}.search input,.travel input{min-width:0;flex:1;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--txt)}button{padding:11px 14px;border:0;border-radius:11px;font-weight:800;cursor:pointer}.primary{background:var(--a);color:white}.secondary{background:var(--card);color:var(--txt);border:1px solid var(--line)}.quick{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.quick button{padding:7px 10px;font-size:12px}.section{margin-top:16px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{padding:14px}.label{font-size:12px;color:var(--muted)}.value{font-size:21px;font-weight:900;margin-top:5px}.current{display:grid;grid-template-columns:1.2fr 1fr;gap:12px}.currentmain{padding:18px}.temp{font-size:62px;font-weight:950}.emoji{font-size:60px}.side{display:grid;grid-template-columns:1fr 1fr;gap:10px}.forecast{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.day{text-align:center;padding:12px 6px}.day .emoji{font-size:28px}.small{font-size:12px;color:var(--muted)}.chart{height:320px;padding:12px}.travel{display:grid;grid-template-columns:1fr 1fr;gap:9px}.travel-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}.routegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.routepoint{padding:15px}.routepoint h3{margin:0 0 7px}.big{font-size:24px;font-weight:950}.status{padding:10px;border-radius:12px;margin-top:10px;background:#eff6ff;color:#1e3a8a}.danger{background:#fff1f2;color:#9f1239}.good{background:#ecfdf5;color:#065f46}.monitor{overflow:auto}.monitor table{width:100%;border-collapse:collapse;min-width:720px}.monitor th,.monitor td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}.map{width:100%;height:380px;border:0;border-radius:15px}.error{padding:11px;border-radius:11px;background:#fee2e2;color:#991b1b;margin-top:10px}.loading{padding:10px;color:var(--muted)}footer{text-align:center;color:var(--muted);font-size:12px;padding:18px}
+@media(max-width:800px){.hero,.current{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}.forecast{grid-template-columns:repeat(4,1fr)}.routegrid{grid-template-columns:1fr}.search{flex-wrap:wrap}.search button{width:100%}}
+@media(max-width:470px){main{padding:12px 9px}.panel{padding:14px}.forecast{grid-template-columns:repeat(2,1fr)}.temp{font-size:52px}}
+</style></head>
+<body>
+<header><div class="nav"><div class="brand">☁️ Weather <span>& Travel Pro+</span></div><div style="display:flex;gap:7px;align-items:center"><button id="install" class="secondary" style="display:none">📲 Install App</button><button id="theme" class="secondary">🌙 Dark</button></div></div></header>
+<main>
+<section class="hero">
+<div class="panel"><h1>Live weather anywhere.</h1><p class="muted">Search any city or use your location. Then monitor weather along a planned journey.</p>
+<div class="search"><input id="city" placeholder="Search any city worldwide"><button id="go" class="primary">Search</button></div>
+<div class="quick"><button class="secondary" data-city="Delhi">Delhi</button><button class="secondary" data-city="Mumbai">Mumbai</button><button class="secondary" data-city="Jaipur">Jaipur</button><button id="loc" class="secondary">📍 My location</button></div><div id="notice"></div></div>
+<div class="panel"><div class="label">SELECTED LOCATION</div><div id="place" class="value">None</div><p id="time" class="muted">Search a location to begin.</p><button id="c" class="primary">°C</button> <button id="f" class="secondary">°F</button></div>
+</section>
+
+<section id="weather" class="section hidden">
+<div class="panel current"><div class="currentmain"><div id="pname" class="value"></div><div id="coords" class="small"></div><div style="display:flex;align-items:center;gap:14px;margin-top:18px"><span id="we" class="emoji">🌤️</span><div><div id="temp" class="temp">--</div><div id="desc" class="muted">--</div></div></div></div>
+<div class="side"><div class="card stat"><div class="label">Feels like</div><div id="feels" class="value">--</div></div><div class="card stat"><div class="label">Humidity</div><div id="hum" class="value">--</div></div><div class="card stat"><div class="label">Wind</div><div id="wind" class="value">--</div></div><div class="card stat"><div class="label">Rain / precipitation</div><div id="rain" class="value">-- mm</div></div></div></div>
+<div class="grid section"><div class="card stat"><div class="label">UV</div><div id="uv" class="value">--</div></div><div class="card stat"><div class="label">Sunrise</div><div id="sunrise" class="value">--</div></div><div class="card stat"><div class="label">Sunset</div><div id="sunset" class="value">--</div></div><div class="card stat"><div class="label">AQI</div><div id="aqi" class="value">--</div></div></div>
+<div class="section"><h2>7-Day Forecast</h2><div id="days" class="forecast"></div></div>
+<div class="section"><h2>Temperature trend</h2><div class="panel chart"><canvas id="chart"></canvas></div></div>
+</section>
+
+<section class="panel section"><h2>🛣️ Full Route Weather Monitor</h2><p class="muted">Create a route between two cities. The app samples intermediate points along the straight-line corridor and reports temperature, rain probability, wind, weather condition and a travel-risk indicator. The map remains available for the actual road route.</p>
+<div class="travel"><input id="from" placeholder="From city"><input id="to" placeholder="To city"><div class="travel-actions"><button id="monitor" class="primary">Monitor full route</button><button id="swap" class="secondary">⇄ Swap</button></div></div>
+<div id="routeStatus"></div><div id="summary" class="routegrid section hidden"></div><div id="tableWrap" class="monitor section hidden"></div><iframe id="map" class="map section hidden" loading="lazy"></iframe></section>
+
+<section class="panel section"><h2>How route monitoring works</h2><p class="muted">The route is divided into multiple weather checkpoints between the origin and destination. Each checkpoint is queried from the weather service. This gives a weather corridor view rather than only checking the two endpoints.</p><div class="grid"><div class="card stat"><div class="label">Checkpoints</div><div class="value">Up to 12</div></div><div class="card stat"><div class="label">Monitored</div><div class="value">Rain + Wind</div></div><div class="card stat"><div class="label">Forecast</div><div class="value">Current</div></div><div class="card stat"><div class="label">Map</div><div class="value">Google Maps</div></div></div></section>
+</main><footer>Weather & Travel Pro+ • Current location by default; any city can still be searched • Internet required • Weather corridor is an approximation between route endpoints</footer>
+
+<script>
+const $=id=>document.getElementById(id), codes={0:["☀️","Clear"],1:["🌤️","Mostly clear"],2:["⛅","Partly cloudy"],3:["☁️","Overcast"],45:["🌫️","Fog"],48:["🌫️","Rime fog"],51:["🌦️","Drizzle"],53:["🌦️","Drizzle"],55:["🌧️","Heavy drizzle"],56:["🌧️","Freezing drizzle"],57:["🌧️","Freezing drizzle"],61:["🌦️","Light rain"],63:["🌧️","Rain"],65:["🌧️","Heavy rain"],66:["🌧️","Freezing rain"],67:["🌧️","Heavy freezing rain"],71:["🌨️","Light snow"],73:["🌨️","Snow"],75:["❄️","Heavy snow"],77:["❄️","Snow grains"],80:["🌦️","Rain showers"],81:["🌧️","Rain showers"],82:["⛈️","Heavy showers"],85:["🌨️","Snow showers"],86:["❄️","Heavy snow showers"],95:["⛈️","Thunderstorm"],96:["⛈️","Thunderstorm + hail"],99:["⛈️","Severe thunderstorm"]};
+let unit="C",selected=null,chart=null;
+function temp(v){return unit==="C"?`${Math.round(v)}°C`:`${Math.round(v*9/5+32)}°F`}
+function km(v){return `${Math.round(v)} km/h`}
+function notice(x,err=false){$("notice").innerHTML=x?`<div class="${err?"error":"loading"}">${x}</div>`:""}
+async function geo(q){let r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=5&language=en&format=json`);if(!r.ok)throw Error("Location search failed");return (await r.json()).results||[]}
+async function wx(lat,lon){let u=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto&forecast_days=7&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max`;let r=await fetch(u);if(!r.ok)throw Error("Weather service unavailable");return r.json()}
+async function aqi(lat,lon){try{let r=await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&timezone=auto&current=us_aqi`);if(!r.ok)return null;let d=await r.json();return d.current?.us_aqi??null}catch(e){return null}}
+function aqiLabel(a){if(a==null)return "Unavailable";if(a<=50)return "Good";if(a<=100)return "Moderate";if(a<=150)return "Unhealthy for sensitive groups";if(a<=200)return "Unhealthy";if(a<=300)return "Very unhealthy";return "Hazardous"}
+async function load(p){notice("Loading weather and air quality…");selected=p;try{let [w,a]=await Promise.all([wx(p.latitude,p.longitude),aqi(p.latitude,p.longitude)]);selected.w=w;selected.aqi=a;$("place").textContent=[p.name,p.admin1,p.country].filter(Boolean).join(", ");$("time").textContent=new Date().toLocaleString();render();$("weather").classList.remove("hidden");notice("")}catch(e){notice(e.message,true)}}
+function render(){let p=selected,w=p.w,c=w.current,d=w.daily,cd=codes[c.weather_code]||["🌤️","Weather"];$("pname").textContent=[p.name,p.admin1,p.country].filter(Boolean).join(", ");$("coords").textContent=`${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)} • ${w.timezone}`;$("we").textContent=cd[0];$("temp").textContent=temp(c.temperature_2m);$("desc").textContent=cd[1];$("feels").textContent=temp(c.apparent_temperature);$("hum").textContent=c.relative_humidity_2m+"%";$("wind").textContent=km(c.wind_speed_10m);$("rain").textContent=c.precipitation+" mm";$("uv").textContent=d.uv_index_max[0].toFixed(1);$("sunrise").textContent=new Date(d.sunrise[0]).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});$("sunset").textContent=new Date(d.sunset[0]).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});$("aqi").textContent=selected.aqi==null?"Unavailable":`${Math.round(selected.aqi)} (${aqiLabel(selected.aqi)})`;
+$("days").innerHTML=d.time.map((x,i)=>{let z=codes[d.weather_code[i]]||["🌤️","Weather"];return `<div class="card day"><div class="small">${new Date(x+"T12:00").toLocaleDateString([],{weekday:"short",month:"short",day:"numeric"})}</div><div class="emoji">${z[0]}</div><b>${temp(d.temperature_2m_max[i])}</b><span class="small">${temp(d.temperature_2m_min[i])}</span><div class="small">💧 ${d.precipitation_probability_max[i]??0}%</div></div>`}).join("");
+if(chart)chart.destroy();chart=new Chart($("chart"),{type:"line",data:{labels:d.time.map(x=>new Date(x+"T12:00").toLocaleDateString([],{weekday:"short"})),datasets:[{label:"Max",data:d.temperature_2m_max.map(v=>unit==="C"?v:v*9/5+32),tension:.35},{label:"Min",data:d.temperature_2m_min.map(v=>unit==="C"?v:v*9/5+32),tension:.35}]},options:{responsive:true,maintainAspectRatio:false}});
+}
+$("go").onclick=async()=>{let q=$("city").value.trim();if(!q)return;try{let r=await geo(q);if(!r[0])throw Error("City not found");load(r[0])}catch(e){notice(e.message,true)}};
+document.querySelectorAll("[data-city]").forEach(b=>b.onclick=()=>{$("city").value=b.dataset.city;$("go").click()});
+$("loc").onclick=()=>{if(!navigator.geolocation)return notice("Geolocation is not supported.",true);notice("Requesting location permission…");navigator.geolocation.getCurrentPosition(async p=>load({name:"My location",latitude:p.coords.latitude,longitude:p.coords.longitude,country:""}),()=>notice("Location permission was not granted.",true),{enableHighAccuracy:true,timeout:10000})};
+$("c").onclick=()=>{unit="C";$("c").className="primary";$("f").className="secondary";if(selected)render()};$("f").onclick=()=>{unit="F";$("f").className="primary";$("c").className="secondary";if(selected)render()};
+$("theme").onclick=()=>{document.body.classList.toggle("dark");$("theme").textContent=document.body.classList.contains("dark")?"☀️ Light":"🌙 Dark"};
+$("swap").onclick=()=>[$("from").value,$("to").value]=[$("to").value,$("from").value];
+
+function points(a,b,n=10){let out=[];for(let i=0;i<n;i++){let t=i/(n-1);out.push({lat:a.latitude+(b.latitude-a.latitude)*t,lon:a.longitude+(b.longitude-a.longitude)*t,ratio:t})}return out}
+function risk(w){let rain=w.current.precipitation||0,wind=w.current.wind_speed_10m||0,code=w.current.weather_code;let severe=[95,96,99].includes(code);if(severe||wind>=55||rain>=8)return ["High","danger"];if(wind>=35||rain>=3||[61,63,65,80,81,82].includes(code))return ["Moderate","status"];return ["Low","good"]}
+$("monitor").onclick=async()=>{
+let f=$("from").value.trim(),t=$("to").value.trim();if(!f||!t){$("routeStatus").innerHTML='<div class="error">Enter both cities.</div>';return}
+$("routeStatus").innerHTML='<div class="loading">Finding cities and monitoring route checkpoints…</div>';try{
+let [fr,tr]=await Promise.all([geo(f),geo(t)]);if(!fr[0]||!tr[0])throw Error("Could not find one of the cities.");
+let ps=points(fr[0],tr[0],10), results=await Promise.all(ps.map(p=>wx(p.lat,p.lon)));
+let risks=results.map(r=>risk(r)), high=risks.filter(x=>x[0]=="High").length, mod=risks.filter(x=>x[0]=="Moderate").length;
+$("summary").innerHTML=`<div class="card routepoint"><h3>📍 Start</h3><div class="big">${temp(results[0].current.temperature_2m)}</div><div class="small">${codes[results[0].current.weather_code]?.[1]||"Weather"}</div></div><div class="card routepoint"><h3>🏁 Destination</h3><div class="big">${temp(results.at(-1).current.temperature_2m)}</div><div class="small">${codes[results.at(-1).current.weather_code]?.[1]||"Weather"}</div></div><div class="card routepoint"><h3>⚠️ Route status</h3><div class="big">${high?"High":mod?"Moderate":"Low"}</div><div class="small">${high} high-risk and ${mod} moderate checkpoints</div></div>`;$("summary").classList.remove("hidden");
+let rows=results.map((r,i)=>{let q=r.current,z=codes[q.weather_code]||["🌤️","Weather"],rk=risks[i];return `<tr><td>Checkpoint ${i+1}</td><td>${(ps[i].lat).toFixed(2)}, ${(ps[i].lon).toFixed(2)}</td><td>${temp(q.temperature_2m)}</td><td>${z[0]} ${z[1]}</td><td>${q.relative_humidity_2m}%</td><td>${km(q.wind_speed_10m)}</td><td>${q.precipitation} mm</td><td>${rk[0]}</td></tr>`}).join("");
+$("tableWrap").innerHTML=`<table><thead><tr><th>Point</th><th>Coordinates</th><th>Temp</th><th>Condition</th><th>Humidity</th><th>Wind</th><th>Rain</th><th>Risk</th></tr></thead><tbody>${rows}</tbody></table>`;$("tableWrap").classList.remove("hidden");
+let from=[fr[0].name,fr[0].country].filter(Boolean).join(", "),to=[tr[0].name,tr[0].country].filter(Boolean).join(", ");$("map").src=`https://www.google.com/maps?q=${encodeURIComponent(from+" to "+to)}&output=embed`;$("map").classList.remove("hidden");$("routeStatus").innerHTML=`<div class="status">Monitored ${results.length} weather checkpoints between <b>${from}</b> and <b>${to}</b>. The checkpoint corridor is an approximation; Google Maps is the source for the actual road geometry.</div>`;
+}catch(e){$("routeStatus").innerHTML=`<div class="error">${e.message}</div>`}
+};
+async function autoCurrentLocation(){
+ if(!navigator.geolocation){notice("Location is not supported by this browser. Search a city instead.",true);return}
+ notice("Getting your current location…");
+ navigator.geolocation.getCurrentPosition(async pos=>{
+   try{
+     let r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(pos.coords.latitude+","+pos.coords.longitude)}&count=1&language=en&format=json`);
+     let d=await r.json(), x=d.results?.[0];
+     if(x) await load(x);
+     else await load({name:"My current location",latitude:pos.coords.latitude,longitude:pos.coords.longitude,country:""});
+   }catch(e){await load({name:"My current location",latitude:pos.coords.latitude,longitude:pos.coords.longitude,country:""})}
+ },()=>notice("Please allow location access to automatically show weather at your current location. You can still search any city.",true),{enableHighAccuracy:true,timeout:12000,maximumAge:300000});
+}
+window.addEventListener("load",autoCurrentLocation);
+// PWA install support
+let deferredInstall = null;
+const installBtn = $("install");
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredInstall = e;
+  installBtn.style.display = "inline-block";
+});
+installBtn?.addEventListener("click", async () => {
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  await deferredInstall.userChoice;
+  deferredInstall = null;
+  installBtn.style.display = "none";
+});
+window.addEventListener("appinstalled", () => {
+  installBtn.style.display = "none";
+});
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(console.error));
+}
+</script></body></html>
